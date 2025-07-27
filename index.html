@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Shallow Sea: Great Barrier Reef Scorepad</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Arial', sans-serif;
+      background:
+        url('images/background.png') center/cover no-repeat fixed,
+        linear-gradient(to bottom, #0077b6, #90e0ef);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    #app {
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 12px;
+      padding: 20px 40px;
+      width: 320px;
+      box-sizing: border-box;
+      text-align: center;
+    }
+    h1, h2, h3 {
+      margin-bottom: 20px;
+      user-select: none;
+    }
+    input[type="number"], input[type="text"] {
+      width: 120px;
+      margin: 6px auto;
+      padding: 8px;
+      border-radius: 6px;
+      border: none;
+      font-size: 16px;
+      text-align: center;
+      -moz-appearance: textfield;
+    }
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+      -webkit-appearance: none; 
+      margin: 0; 
+    }
+    button {
+      padding: 10px 20px;
+      margin: 10px 8px 0 8px;
+      border: none;
+      border-radius: 6px;
+      background-color: #0077b6;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.3s ease;
+    }
+    button:hover:not(:disabled) {
+      background-color: #005f8a;
+    }
+    button:disabled {
+      background-color: #555;
+      cursor: not-allowed;
+    }
+    .screen img {
+      height: 80px;
+      margin-bottom: 15px;
+      user-select: none;
+    }
+    .inputs-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+      align-items: center;
+    }
+    .buttons-container {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+    }
+    ul.summary-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 20px 0;
+      text-align: left;
+    }
+    ul.summary-list li {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      font-size: 16px;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script>
+    const categories = [
+      { name: "Turtle Island", icon: "turtle.png", color: "green" },
+      { name: "Orange Ecosystem", icon: "orange.png", color: "orange" },
+      { name: "Blue Ecosystem", icon: "blue.png", color: "blue" },
+      { name: "First Row", icon: "ocean.png", color: "teal" },
+      { name: "Second Row", icon: "ocean.png", color: "teal" },
+      { name: "Third Row", icon: "ocean.png", color: "teal" },
+      { name: "Fourth Row", icon: "ocean.png", color: "teal" },
+      { name: "Fifth Row", icon: "ocean.png", color: "teal" },
+      { name: "Differing Completed Sealife", icon: "sealife.png", color: "purple" },
+      { name: "Incomplete Fish", icon: "incomplete.png", color: "gray" }
+    ];
+
+    let playerCount = 1;
+    let players = [];
+    let scores = [];
+    let currentScreen = 0; 
+    let currentPlayerIndex = 0;
+
+    const app = document.getElementById("app");
+
+    function render() {
+      app.innerHTML = "";
+
+      if (currentScreen === 0) {
+        renderPlayerCountScreen();
+      } else if (currentScreen === 1) {
+        renderPlayerNameScreen();
+      } else if (currentScreen > 1 && currentScreen <= categories.length + 1) {
+        renderScoringScreen(currentPlayerIndex);
+      } else {
+        renderSummaryScreen();
+      }
+    }
+
+    function renderPlayerCountScreen() {
+      const screen = document.createElement("div");
+      screen.className = "screen";
+
+      const title = document.createElement("h1");
+      title.textContent = "How many players?";
+      screen.appendChild(title);
+
+      const input = document.createElement("input");
+      input.type = "number";
+      input.min = 1;
+      input.max = 4;
+      input.value = playerCount;
+      screen.appendChild(input);
+
+      const btn = document.createElement("button");
+      btn.textContent = "Next";
+      btn.disabled = true;
+      screen.appendChild(btn);
+
+      input.addEventListener("input", () => {
+        const val = parseInt(input.value);
+        btn.disabled = !(val >= 1 && val <= 4);
+      });
+
+      btn.addEventListener("click", () => {
+        playerCount = parseInt(input.value);
+        players = Array(playerCount).fill("");
+        scores = Array.from({ length: categories.length }, () => Array(playerCount).fill(0));
+        currentScreen = 1; // Next screen: enter player names
+        render();
+      });
+
+      app.appendChild(screen);
+    }
+
+    function renderPlayerNameScreen() {
+      const screen = document.createElement("div");
+      screen.className = "screen";
+
+      const title = document.createElement("h1");
+      title.textContent = "Enter Player Names";
+      screen.appendChild(title);
+
+      players.forEach((name, index) => {
+        const input = document.createElement("input");
+        input.type = "text";
+        input.placeholder = `Player ${index + 1}`;
+        input.value = name;
+        input.addEventListener("input", e => players[index] = e.target.value);
+        screen.appendChild(input);
+      });
+
+      const btn = document.createElement("button");
+      btn.textContent = "Start Scoring";
+      btn.disabled = players.some(name => !name.trim());
+      screen.appendChild(btn);
+
+      // Enable Start only if all names filled
+      screen.querySelectorAll("input").forEach(input => {
+        input.addEventListener("input", () => {
+          btn.disabled = players.some(name => !name.trim());
+        });
+      });
+
+      btn.addEventListener("click", () => {
+        currentPlayerIndex = 0;
+        currentScreen = 2; // Start scoring first player category 0
+        render();
+      });
+
+      app.appendChild(screen);
+    }
+
+    function renderScoringScreen(playerIdx) {
+      const screen = document.createElement("div");
+      screen.className = "screen";
+
+      const categoryIndex = currentScreen - 2;
+
+      // Player splash
+      const splash = document.createElement("h2");
+      splash.textContent = `Player ${playerIdx + 1}: ${players[playerIdx] || ("Player " + (playerIdx + 1))}`;
+      screen.appendChild(splash);
+
+      // Category title
+      const catTitle = document.createElement("h3");
+      catTitle.textContent = categories[categoryIndex].name;
+      screen.appendChild(catTitle);
+
+      // Category icon
+      const img = document.createElement("img");
+      img.src = `images/${categories[categoryIndex].icon}`;
+      img.alt = categories[categoryIndex].name;
+      screen.appendChild(img);
+
+      // Input
+      const input = document.createElement("input");
+      input.type = "number";
+      input.min = 0;
+      input.value = scores[categoryIndex][playerIdx];
+      input.placeholder = "Enter score";
+      screen.appendChild(input);
+
+      // Buttons
+      const buttons = document.createElement("div");
+      buttons.className = "buttons-container";
+
+      if (!(playerIdx === 0 && categoryIndex === 0)) {
+        const backBtn = document.createElement("button");
+        backBtn.textContent = "Back";
+        backBtn.addEventListener("click", () => {
+          saveScore(categoryIndex, playerIdx, input.value);
+          if (categoryIndex === 0) {
+            currentPlayerIndex--;
+            currentScreen = categories.length + 1;
+          } else {
+            currentScreen--;
+          }
+          render();
+        });
+        buttons.appendChild(backBtn);
+      }
+
+      const nextBtn = document.createElement("button");
+      nextBtn.textContent = (playerIdx === playerCount - 1 && categoryIndex === categories.length - 1) ? "See Totals" : "Next";
+      nextBtn.addEventListener("click", () => {
+        saveScore(categoryIndex, playerIdx, input.value);
+
+        if (categoryIndex === categories.length - 1) {
+          if (playerIdx === playerCount - 1) {
+            currentScreen = categories.length + 2;
+          } else {
+            currentPlayerIndex++;
+            currentScreen = 2;
+          }
+        } else {
+          currentScreen++;
+        }
+        render();
+      });
+      buttons.appendChild(nextBtn);
+
+      screen.appendChild(buttons);
+
+      app.appendChild(screen);
+    }
+
+    function saveScore(categoryIndex, playerIdx, val) {
+      const parsed = parseInt(val);
+      scores[categoryIndex][playerIdx] = isNaN(parsed) || parsed < 0 ? 0 : parsed;
+    }
+
+    function renderSummaryScreen() {
+      const screen = document.createElement("div");
+      screen.className = "screen";
+
+      const title = document.createElement("h2");
+      title.textContent = "Final Totals";
+      screen.appendChild(title);
+
+      const ul = document.createElement("ul");
+      ul.className = "summary-list";
+
+      const totals = Array(playerCount).fill(0);
+      scores.forEach(categoryScores => {
+        for (let i = 0; i < playerCount; i++) {
+          totals[i] += categoryScores[i];
+        }
+      });
+
+      players.forEach((name, idx) => {
+        const li = document.createElement("li");
+        li.innerHTML = `<span>${name || "Player " + (idx + 1)}</span><span>${totals[idx]}</span>`;
+        ul.appendChild(li);
+      });
+      screen.appendChild(ul);
+
+      const resetBtn = document.createElement("button");
+      resetBtn.textContent = "Start Over";
+      resetBtn.addEventListener("click", () => {
+        playerCount = 1;
+        players = [];
+        scores = [];
+        currentScreen = 0;
+        currentPlayerIndex = 0;
+        render();
+      });
+      screen.appendChild(resetBtn);
+
+      app.appendChild(screen);
+    }
+
+    render(); // Start app
+  </script>
+</body>
+</html>

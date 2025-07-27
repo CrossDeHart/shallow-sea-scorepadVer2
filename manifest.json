@@ -1,0 +1,23 @@
+{
+  "name": "Shallow Sea: Great Barrier Reef Scoring",
+  "short_name": "ShallowSea",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#023e8a",
+  "theme_color": "#0077b6",
+  "description": "Step-by-step scoring app for the Shallow Sea board game with a final summary screen.",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "orientation": "portrait",
+  "scope": "/"
+}
