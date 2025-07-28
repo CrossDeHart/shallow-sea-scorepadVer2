@@ -17,11 +17,18 @@ let players = [];
 let scores = [];
 let currentPlayer = 0;
 let currentCategory = 0;
+let currentScreen = -1; //splash screen
 
 const app = document.getElementById("app");
 
 function render() {
   app.innerHTML = "";
+
+  //splash screen
+  if (currentScreen === -1){
+    renderSplashScreen();
+    return;
+  }
 
   if (totalPlayers === 0) {
     renderPlayerCountScreen();
@@ -38,6 +45,26 @@ function render() {
   } else {
     renderSummaryScreen();
   }
+}
+
+function renderSplashScreen(){
+  const screen = document.createElement("div");
+  screen.className = "screen splash";
+
+  const title = document.createElement("h1");
+  title.textContent = "Welcome to the Shallow Sea Scorepad!";
+  screen.appendChild(title);
+
+  app.appendChild(screen);
+
+  //Fade out after 2.5 seconds, then go to player count.
+  setTimeout(() => {
+    screen.classList.add("fade-out");
+      setTimeout(() => {
+        currentScreen = 0;
+        render();
+      }, 1000); //wait for fade out animation to finish.
+  }, 2500);
 }
 
 function getActiveCategories() {
@@ -148,8 +175,16 @@ function renderCategoryScreen() {
   buttonsContainer.appendChild(backBtn);
 
   const nextBtn = document.createElement("button");
-  nextBtn.textContent =
-    currentCategory === getActiveCategories().length - 1 ? "Next Player" : "Next";
+    if (currentCategory === getActiveCategories().length - 1) {
+      if (currentPlayer === totalPlayers - 1) {
+    nextBtn.textContent = "Show Scores";
+  }   else {
+    nextBtn.textContent = "Next Player";
+  }
+}   else {
+  nextBtn.textContent = "Next";
+}
+
   nextBtn.addEventListener("click", () => {
     currentCategory++;
     render();
@@ -197,6 +232,7 @@ function renderSummaryScreen() {
     scores = [];
     currentPlayer = 0;
     currentCategory = 0;
+    currentScreen = -1; //reset to splash screen
     render();
   });
 

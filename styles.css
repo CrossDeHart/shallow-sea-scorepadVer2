@@ -83,18 +83,32 @@ select, input[type="text"] {
 }
 
 button {
+  appearance: none;            /* Remove mobile browser defaults */
+  -webkit-appearance: none;    /* For Safari/Opera Mobile */
+  -moz-appearance: none;       /* For Firefox Mobile */
+
+  display: inline-block;
   padding: 10px 16px;
   font-size: 16px;
-  border-radius: 8px;
+  font-weight: bold;
+
   border: none;
-  background: #0077b6;
-  color: white;
-  cursor: pointer;
+  border-radius: 8px;
+  color: #fff;
+
+  background: #0077b6;          /* Blue like on Firefox desktop */
   box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
 button.secondary {
-  background: #444;
+  background: #444;             /* Gray secondary button */
+}
+
+button:active {
+  transform: scale(0.98);       /* Small click animation */
 }
 
 .summary-list {
@@ -117,4 +131,21 @@ button.secondary {
   justify-content: center;
   gap: 15px;
   margin-top: 20px;
+}
+
+.splash h1{
+  font-size: 1.8rem;
+  text-shadow: 2px 2px 8px rgba(0,0,0,0.6);
+}
+
+.fade-out {
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+
+h1.app-title {
+  margin: 10px 0;
+  font-size: 2rem;
+  color: white;
+  text-align: center;
 }
