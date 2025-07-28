@@ -1,0 +1,16 @@
+{
+  "name": "Shallow Sea: Great Barrier Reef Scorepad",
+  "short_name": "ShallowSeaScorepad",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0077b6",
+  "theme_color": "#90e0ef",
+  "description": "Digital scorepad for Shallow Sea board game.",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
