@@ -103,36 +103,27 @@ function renderCategoryScreen() {
   const screen = document.createElement("div");
   screen.className = "screen";
 
-  let category;
-  if (totalPlayers === 1 && currentCategory === categories.length) {
-    // Show lionfish category only for 1 player at last input
-    category = lionfishCategory;
-  } else {
-    category = categories[currentCategory];
-  }
+  const category = categories[currentCategory];
 
-  // Card container wrapping title, image, and input
-  const card = document.createElement("div");
-  card.className = "category-card";
-
-  // Title
+  // Player + category name
   const label = document.createElement("h2");
   label.textContent = `${players[currentPlayer]}: ${category.name}`;
-  card.appendChild(label);
+  screen.appendChild(label);
 
-  // Wrapper for image + input
+  // ALWAYS wrap image + input in a container
   const wrapper = document.createElement("div");
   wrapper.className = "category-wrapper";
 
+  // Category image
   const img = document.createElement("img");
   img.src = `images/${category.icon}`;
   img.alt = category.name;
   img.className = "category-image";
   wrapper.appendChild(img);
 
+  // Score input
   const input = document.createElement("input");
   input.type = "number";
-  input.min = 0;
   input.placeholder = "Score";
   input.value = scores[currentPlayer][currentCategory];
   input.className = "score-input";
@@ -141,8 +132,7 @@ function renderCategoryScreen() {
   });
   wrapper.appendChild(input);
 
-  card.appendChild(wrapper);
-  screen.appendChild(card);
+  screen.appendChild(wrapper);
 
   // Navigation buttons
   const buttonsContainer = document.createElement("div");
@@ -150,22 +140,22 @@ function renderCategoryScreen() {
 
   const backBtn = document.createElement("button");
   backBtn.textContent = "Back";
-  backBtn.className = "secondary";
+  backBtn.className = "secondary back-with-icon";  // <-- Added class here
   backBtn.addEventListener("click", () => {
     if (currentCategory > 0) {
       currentCategory--;
     } else if (currentPlayer > 0) {
       currentPlayer--;
-      currentCategory = (totalPlayers === 1 ? categories.length : categories.length - 1);
+      currentCategory = categories.length - 1;
     }
     render();
   });
   buttonsContainer.appendChild(backBtn);
 
   const nextBtn = document.createElement("button");
-  const maxCategories = totalPlayers === 1 ? categories.length + 1 : categories.length;
   nextBtn.textContent =
-    currentCategory === maxCategories - 1 ? "Next Player" : "Next";
+    currentCategory === categories.length - 1 ? "Next Player" : "Next";
+  nextBtn.className = "next-with-icon";  // <-- Added class here
   nextBtn.addEventListener("click", () => {
     currentCategory++;
     render();
