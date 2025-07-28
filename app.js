@@ -11,6 +11,9 @@ const categories = [
   { name: "Incomplete Fish", icon: "incomplete.png", color: "gray" }
 ];
 
+// Lionfish category info (only for 1 player)
+const lionfishCategory = { name: "Lionfish", icon: "lionfish.png", color: "red" };
+
 let totalPlayers = 0;
 let players = [];
 let scores = [];
@@ -27,7 +30,8 @@ function render() {
   } else if (players.length < totalPlayers) {
     renderPlayerNameScreen();
   } else if (currentPlayer < totalPlayers) {
-    if (currentCategory < categories.length) {
+    const maxCategories = totalPlayers === 1 ? categories.length + 1 : categories.length;
+    if (currentCategory < maxCategories) {
       renderCategoryScreen();
     } else {
       currentPlayer++;
@@ -44,26 +48,35 @@ function renderPlayerCountScreen() {
   screen.className = "screen";
 
   screen.innerHTML = `<h1>How Many Players?</h1>`;
-  const select = document.createElement("select");
-  select.innerHTML = `
-    <option value="">Select</option>
-    <option value="1">1 Player</option>
-    <option value="2">2 Players</option>
-    <option value="3">3 Players</option>
-    <option value="4">4 Players</option>
-  `;
-  select.addEventListener("change", e => {
-    totalPlayers = parseInt(e.target.value);
-    players = [];
-    scores = Array.from({ length: totalPlayers }, () =>
-      Array(categories.length).fill(0)
-    );
-    render();
-  });
 
-  screen.appendChild(select);
+  // Create a container div for buttons
+  const btnContainer = document.createElement("div");
+  btnContainer.style.display = "grid";
+  btnContainer.style.gridTemplateColumns = "repeat(2, 120px)";
+  btnContainer.style.gridGap = "15px";
+  btnContainer.style.justifyContent = "center";
+  btnContainer.style.marginTop = "20px";
+
+  for (let i = 1; i <= 4; i++) {
+    const btn = document.createElement("button");
+    btn.textContent = i === 1 ? "1 Player" : `${i} Players`;
+    btn.style.width = "120px";
+    btn.style.height = "50px";
+    btn.addEventListener("click", () => {
+      totalPlayers = i;
+      players = [];
+      scores = Array.from({ length: totalPlayers }, () =>
+        Array(categories.length + (totalPlayers === 1 ? 1 : 0)).fill(0)
+      );
+      render();
+    });
+    btnContainer.appendChild(btn);
+  }
+
+  screen.appendChild(btnContainer);
   app.appendChild(screen);
 }
+
 
 function renderPlayerNameScreen() {
   const screen = document.createElement("div");
@@ -90,27 +103,36 @@ function renderCategoryScreen() {
   const screen = document.createElement("div");
   screen.className = "screen";
 
-  const category = categories[currentCategory];
+  let category;
+  if (totalPlayers === 1 && currentCategory === categories.length) {
+    // Show lionfish category only for 1 player at last input
+    category = lionfishCategory;
+  } else {
+    category = categories[currentCategory];
+  }
 
-  // Player + category name
+  // Card container wrapping title, image, and input
+  const card = document.createElement("div");
+  card.className = "category-card";
+
+  // Title
   const label = document.createElement("h2");
   label.textContent = `${players[currentPlayer]}: ${category.name}`;
-  screen.appendChild(label);
+  card.appendChild(label);
 
-  // ALWAYS wrap image + input in a container
+  // Wrapper for image + input
   const wrapper = document.createElement("div");
   wrapper.className = "category-wrapper";
 
-  // Category image
   const img = document.createElement("img");
   img.src = `images/${category.icon}`;
   img.alt = category.name;
   img.className = "category-image";
   wrapper.appendChild(img);
 
-  // Score input
   const input = document.createElement("input");
   input.type = "number";
+  input.min = 0;
   input.placeholder = "Score";
   input.value = scores[currentPlayer][currentCategory];
   input.className = "score-input";
@@ -119,7 +141,8 @@ function renderCategoryScreen() {
   });
   wrapper.appendChild(input);
 
-  screen.appendChild(wrapper);
+  card.appendChild(wrapper);
+  screen.appendChild(card);
 
   // Navigation buttons
   const buttonsContainer = document.createElement("div");
@@ -133,15 +156,16 @@ function renderCategoryScreen() {
       currentCategory--;
     } else if (currentPlayer > 0) {
       currentPlayer--;
-      currentCategory = categories.length - 1;
+      currentCategory = (totalPlayers === 1 ? categories.length : categories.length - 1);
     }
     render();
   });
   buttonsContainer.appendChild(backBtn);
 
   const nextBtn = document.createElement("button");
+  const maxCategories = totalPlayers === 1 ? categories.length + 1 : categories.length;
   nextBtn.textContent =
-    currentCategory === categories.length - 1 ? "Next Player" : "Next";
+    currentCategory === maxCategories - 1 ? "Next Player" : "Next";
   nextBtn.addEventListener("click", () => {
     currentCategory++;
     render();
@@ -161,7 +185,16 @@ function renderSummaryScreen() {
   ul.className = "summary-list";
 
   players.forEach((player, pIndex) => {
-    const total = scores[pIndex].reduce((a, b) => a + b, 0);
+    let total = scores[pIndex].reduce((a, b) => a + b, 0);
+
+    // Subtract lionfish penalty only if 1 player
+    if (totalPlayers === 1) {
+      const lionfishCount = scores[pIndex][categories.length] || 0;
+      const penaltyFish = Math.max(0, lionfishCount - 2);
+      const penalty = penaltyFish * 2;
+      total -= penalty;
+    }
+
     const li = document.createElement("li");
     li.innerHTML = `<span>${player}</span> <span>${total}</span>`;
     ul.appendChild(li);

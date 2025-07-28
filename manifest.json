@@ -5,7 +5,7 @@
   "display": "standalone",
   "background_color": "#0077b6",
   "theme_color": "#90e0ef",
-  "description": "Digital scorepad for the Shallow Sea board game with 4 players.",
+  "description": "Digital scorepad for Shallow Sea board game.",
   "icons": [
     {
       "src": "icon.png",
