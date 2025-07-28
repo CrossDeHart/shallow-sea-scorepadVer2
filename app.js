@@ -8,11 +8,9 @@ const categories = [
   { name: "Fourth Row", icon: "ocean.png", color: "teal" },
   { name: "Fifth Row", icon: "ocean.png", color: "teal" },
   { name: "Differing Completed Sealife", icon: "sealife.png", color: "purple" },
-  { name: "Incomplete Fish", icon: "incomplete.png", color: "gray" }
+  { name: "Incomplete Fish", icon: "incomplete.png", color: "gray" },
+  { name: "Lionfish Penalty", icon: "lionfish.png", color: "red", soloOnly: true }
 ];
-
-// Lionfish category info (only for 1 player)
-const lionfishCategory = { name: "Lionfish", icon: "lionfish.png", color: "red" };
 
 let totalPlayers = 0;
 let players = [];
@@ -30,8 +28,7 @@ function render() {
   } else if (players.length < totalPlayers) {
     renderPlayerNameScreen();
   } else if (currentPlayer < totalPlayers) {
-    const maxCategories = totalPlayers === 1 ? categories.length + 1 : categories.length;
-    if (currentCategory < maxCategories) {
+    if (currentCategory < getActiveCategories().length) {
       renderCategoryScreen();
     } else {
       currentPlayer++;
@@ -43,40 +40,40 @@ function render() {
   }
 }
 
+function getActiveCategories() {
+  return categories.filter(cat => !(cat.soloOnly && totalPlayers > 1));
+}
+
 function renderPlayerCountScreen() {
   const screen = document.createElement("div");
   screen.className = "screen";
 
   screen.innerHTML = `<h1>How Many Players?</h1>`;
 
-  // Create a container div for buttons
-  const btnContainer = document.createElement("div");
-  btnContainer.style.display = "grid";
-  btnContainer.style.gridTemplateColumns = "repeat(2, 120px)";
-  btnContainer.style.gridGap = "15px";
-  btnContainer.style.justifyContent = "center";
-  btnContainer.style.marginTop = "20px";
+  // 2x2 Button Grid for player count
+  const buttonGrid = document.createElement("div");
+  buttonGrid.style.display = "grid";
+  buttonGrid.style.gridTemplateColumns = "repeat(2, 1fr)";
+  buttonGrid.style.gap = "10px";
+  buttonGrid.style.marginTop = "20px";
 
-  for (let i = 1; i <= 4; i++) {
+  [1, 2, 3, 4].forEach(num => {
     const btn = document.createElement("button");
-    btn.textContent = i === 1 ? "1 Player" : `${i} Players`;
-    btn.style.width = "120px";
-    btn.style.height = "50px";
+    btn.textContent = `${num} Player${num > 1 ? "s" : ""}`;
     btn.addEventListener("click", () => {
-      totalPlayers = i;
+      totalPlayers = num;
       players = [];
       scores = Array.from({ length: totalPlayers }, () =>
-        Array(categories.length + (totalPlayers === 1 ? 1 : 0)).fill(0)
+        Array(getActiveCategories().length).fill(0)
       );
       render();
     });
-    btnContainer.appendChild(btn);
-  }
+    buttonGrid.appendChild(btn);
+  });
 
-  screen.appendChild(btnContainer);
+  screen.appendChild(buttonGrid);
   app.appendChild(screen);
 }
-
 
 function renderPlayerNameScreen() {
   const screen = document.createElement("div");
@@ -103,25 +100,23 @@ function renderCategoryScreen() {
   const screen = document.createElement("div");
   screen.className = "screen";
 
-  const category = categories[currentCategory];
+  const category = getActiveCategories()[currentCategory];
 
   // Player + category name
   const label = document.createElement("h2");
   label.textContent = `${players[currentPlayer]}: ${category.name}`;
   screen.appendChild(label);
 
-  // ALWAYS wrap image + input in a container
+  // Image + input container
   const wrapper = document.createElement("div");
   wrapper.className = "category-wrapper";
 
-  // Category image
   const img = document.createElement("img");
   img.src = `images/${category.icon}`;
   img.alt = category.name;
   img.className = "category-image";
   wrapper.appendChild(img);
 
-  // Score input
   const input = document.createElement("input");
   input.type = "number";
   input.placeholder = "Score";
@@ -134,19 +129,19 @@ function renderCategoryScreen() {
 
   screen.appendChild(wrapper);
 
-  // Navigation buttons
+  // Buttons container
   const buttonsContainer = document.createElement("div");
   buttonsContainer.className = "buttons-container";
 
   const backBtn = document.createElement("button");
   backBtn.textContent = "Back";
-  backBtn.className = "secondary back-with-icon";  // <-- Added class here
+  backBtn.className = "secondary";
   backBtn.addEventListener("click", () => {
     if (currentCategory > 0) {
       currentCategory--;
     } else if (currentPlayer > 0) {
       currentPlayer--;
-      currentCategory = categories.length - 1;
+      currentCategory = getActiveCategories().length - 1;
     }
     render();
   });
@@ -154,8 +149,7 @@ function renderCategoryScreen() {
 
   const nextBtn = document.createElement("button");
   nextBtn.textContent =
-    currentCategory === categories.length - 1 ? "Next Player" : "Next";
-  nextBtn.className = "next-with-icon";  // <-- Added class here
+    currentCategory === getActiveCategories().length - 1 ? "Next Player" : "Next";
   nextBtn.addEventListener("click", () => {
     currentCategory++;
     render();
@@ -177,12 +171,15 @@ function renderSummaryScreen() {
   players.forEach((player, pIndex) => {
     let total = scores[pIndex].reduce((a, b) => a + b, 0);
 
-    // Subtract lionfish penalty only if 1 player
+    // Apply Lionfish penalty only for solo play
     if (totalPlayers === 1) {
-      const lionfishCount = scores[pIndex][categories.length] || 0;
-      const penaltyFish = Math.max(0, lionfishCount - 2);
-      const penalty = penaltyFish * 2;
-      total -= penalty;
+      const lionfishIndex = getActiveCategories().findIndex(c => c.name === "Lionfish Penalty");
+      if (lionfishIndex !== -1) {
+        const lionfishCount = scores[pIndex][lionfishIndex];
+        if (lionfishCount > 2) {
+          total -= (lionfishCount - 2) * 2;
+        }
+      }
     }
 
     const li = document.createElement("li");
